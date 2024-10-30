@@ -8,19 +8,20 @@ const userSchema = new Schema({
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
     },
     phone: {
         type: String,
         required: true,
         unique: true,
         trim: true,
+        index: true,
     },
     password: {
       type: String,
       required: true,
       trim: true,
       minlength: 6,
-      maxlength: 16,
     },
     name: {
       type: String,
