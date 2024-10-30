@@ -23,8 +23,9 @@ app.use(cookieParser());
 
 // Routes
 ///////////////////////////////////////////////////////////////
-app.get('/', (req, res) => {
-  res.send('Hello World');
-});
+import userRouter from "./routes/user/user.routes.js";
+
+app.use("/api/v1/user", userRouter);
+
 
 export {app};
