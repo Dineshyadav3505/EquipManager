@@ -9,6 +9,12 @@ const userSchema = new Schema({
       lowercase: true,
       trim: true,
     },
+    phone: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+    },
     password: {
       type: String,
       required: true,
@@ -24,8 +30,8 @@ const userSchema = new Schema({
     role: {
       type: String,
       required: true,
-      default: 'banned',
-      enum: ['superAdmin', 'admin', 'user', 'guest', 'banned'],
+      default: 'guest',
+      enum: ['superAdmin', 'admin', 'user', 'guest', 'banned', 'client']
     },
 });
 
