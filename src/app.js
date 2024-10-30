@@ -3,13 +3,11 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
-import compression from 'compression';
-
-dotenv.config();
+// import compression from 'compression';
 
 const app = express();
 
-app.use(compression())
+// app.use(compression())
 
 app.use(bodyParser.json());
 
