@@ -47,8 +47,6 @@ const register = AsyncHandler(async (req, res, next) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log(hashedPassword);
-
   // Create new user
   const user = await User.create({
     mail,
@@ -65,7 +63,8 @@ const register = AsyncHandler(async (req, res, next) => {
   }
 
   // Generate access token
-  const { accessToken } = generateToken(user._id);
+  const accessToken = generateToken(createdUser);
+
 
   // Set cookie and send response
   res
@@ -77,41 +76,47 @@ const register = AsyncHandler(async (req, res, next) => {
 });
 
 const login = AsyncHandler(async (req, res, next) => {
-    const { mail, password } = req.body;
-    
-    const requiredFields = ['mail', 'password'];
-    
-    // Check for required fields
-    for (const field of requiredFields) {
-        if (!req.body[field] || req.body[field].trim() === "") {
-        throw new ApiError(400, `${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
-        }
+  const { mail, password } = req.body;
+
+  // Check for required fields
+  const requiredFields = ['mail', 'password'];
+  for (const field of requiredFields) {
+    if (!req.body[field] || req.body[field].trim() === "") {
+      throw new new ApiError(400, `${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
     }
-    
-    // Find user by email
-    const user = await User.findOne({ mail });
-    
-    if (!user) {
-        throw new ApiError(404, "User not found");
-    }
-    
-    // Compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
-    
-    if (!isMatch) {
-        throw new ApiError(401, "Invalid credentials");
-    }
-    
-    // Generate access token
-    const { accessToken } = generateToken(user._id);
-    
-    // Set cookie and send response
-    res
-        .status(200)
-        .cookie("accessToken", accessToken, options)
-        .json(new ApiResponse(200, { accessToken }, "User logged in successfully"));
-    }
-);
+  }
+
+  // Find user by email
+  const user = await User.findOne({ mail });
+
+  if (!user) {
+    throw new ApiError(401, "Invalid credentials");
+  }
+
+  // Compare passwords
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    throw new ApiError(401, "Invalid credentials");
+  }
+
+  // Generate access token
+  const accessToken  = generateToken(user);
+
+  // Create a user object without sensitive data
+  const userData = { 
+    _id: user._id,
+    mail: user.mail,
+    phone: user.phone,
+    name: user.name,
+    role: user.role,
+};
+  // Set cookie and send response
+  res
+   .status(200)
+   .cookie("accessToken", accessToken, options)
+   .json(new ApiResponse(200, userData, "User logged in successfully"));
+});
 
 export { 
     register,
