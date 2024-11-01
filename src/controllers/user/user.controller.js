@@ -128,7 +128,7 @@ const logout = AsyncHandler(async (req, res, next) => {
   res
     .status(200)
     .clearCookie("accessToken", options)
-    .json(new ApiResponse(200, {}, "User logged out successfully"));
+    .json(new ApiResponse(200, req.user, "User logged out successfully"));
 });
 
 const updateProfile = AsyncHandler(async (req, res, next) => {
@@ -171,12 +171,15 @@ const updateProfile = AsyncHandler(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, 4);
 
   // Update user profile
-  const updated = await User.findByIdAndUpdate({ _id: req.user._id }, {
-    name,
-    phone,
-    mail,
-    password: hashedPassword,
-  });
+  const updated = await User.findByIdAndUpdate(
+    { _id: req.user._id },
+    {
+      name,
+      phone,
+      mail,
+      password: hashedPassword,
+    }
+  );
 
   if (!updated) {
     throw new ApiError(500, "User profile not updated");
@@ -188,7 +191,9 @@ const updateProfile = AsyncHandler(async (req, res, next) => {
   // Send response
   res
     .status(200)
-    .json(new ApiResponse(200, updatedUser, "User profile updated successfully"));
+    .json(
+      new ApiResponse(200, updatedUser, "User profile updated successfully")
+    );
 });
 
 const deleteProfile = AsyncHandler(async (req, res, next) => {
@@ -202,23 +207,20 @@ const deleteProfile = AsyncHandler(async (req, res, next) => {
   res
     .status(200)
     .clearCookie("accessToken", options)
-    .json(new ApiResponse(200, {}, "User profile deleted successfully"));
+    .json(new ApiResponse(200, req.user, "User profile deleted successfully"));
 });
 
-const getProfile = AsyncHandler(async (req, res, next) => {
-
-  const user = await User.findById(req.user?._id).select("-password");
-  console.log(req.user);
-
-  if (!user) {
-    throw new ApiError(404, "User not found");
-  }
-
-  console.log(user);
-  // Send response
-  res
+const getProfile = AsyncHandler(async (req, res) => {
+  return res
     .status(200)
-    .json(new ApiResponse(200, user, "User profile retrieved successfully"));
+    .json(new ApiResponse(200, req.user, "User fetched successfully"));
 });
 
-export { register, login, logout, updateProfile, deleteProfile, getProfile };
+export {
+  register,
+  login,
+  logout,
+  updateProfile,
+  deleteProfile,
+  getProfile,
+};
