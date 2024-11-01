@@ -131,11 +131,76 @@ const logout = AsyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, req.user, "User logged out successfully"));
 });
 
-const updateProfile = AsyncHandler(async (req, res, next) => {
-  const { name, phone, mail, password } = req.body;
+// const updateProfile = AsyncHandler(async (req, res, next) => {
+//   const { name, phone, mail, password } = req.body;
+
+//   // Check for required fields
+//   const requiredFields = ["name", "phone", "mail", "password"];
+//   for (const field of requiredFields) {
+//     if (!req.body[field] || req.body[field].trim() === "") {
+//       throw new ApiError(
+//         400,
+//         `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+//       );
+//     }
+//   }
+
+//   // Validate email
+//   if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(mail)) {
+//     throw new ApiError(400, "Invalid Email");
+//   }
+
+//   // Check if email already exists
+//   const existingUser = await User.findOne({ mail });
+//   if (existingUser) {
+//     throw new ApiError(409, "Email already exists");
+//   }
+
+//   // Check if phone number already exists
+//   const existing = await User.findOne({ phone });
+//   if (existing) {
+//     throw new ApiError(409, "Phone number already exists");
+//   }
+
+//   // Validate password length
+//   if (password.length < 8 || password.length > 16) {
+//     throw new ApiError(400, "Password must be between 8 and 16 characters");
+//   }
+
+//   // Hash password
+//   const hashedPassword = await bcrypt.hash(password, 4);
+
+//   // Update user profile
+//   const updated = await User.findByIdAndUpdate(
+//     { _id: req.user._id },
+//     {
+//       name,
+//       phone,
+//       mail,
+//       password: hashedPassword,
+//     }
+//   );
+
+//   if (!updated) {
+//     throw new ApiError(500, "User profile not updated");
+//   }
+
+//   // Find the updated user without password
+//   const updatedUser = await User.findById(req.user._id).select("-password");
+
+//   // Send response
+//   res
+//     .status(200)
+//     .json(
+//       new ApiResponse(200, updatedUser, "User profile updated successfully")
+//     );
+// });
+
+const updateMail = AsyncHandler(async (req, res, next) => {
+  const { mail } = req.body;
 
   // Check for required fields
-  const requiredFields = ["name", "phone", "mail", "password"];
+  const requiredFields = ["mail"];
   for (const field of requiredFields) {
     if (!req.body[field] || req.body[field].trim() === "") {
       throw new ApiError(
@@ -156,10 +221,121 @@ const updateProfile = AsyncHandler(async (req, res, next) => {
     throw new ApiError(409, "Email already exists");
   }
 
+  // Update user profile
+  const updated = await User.findByIdAndUpdate(
+    { _id: req.user._id },
+    {
+      mail,
+    }
+  );
+
+  if (!updated) {
+    throw new ApiError(500, "User profile not updated");
+  }
+
+  // Find the updated user without password
+  const updatedUser = await User.findById(req.user._id).select("-password");
+
+  // Send response
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedUser, "User profile updated successfully")
+    );
+});
+
+const updatePhone = AsyncHandler(async (req, res, next) => {
+  const { phone } = req.body;
+
+  // Check for required fields
+  const requiredFields = ["phone"];
+  for (const field of requiredFields) {
+    if (!req.body[field] || req.body[field].trim() === "") {
+      throw new ApiError(
+        400,
+        `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+      );
+    }
+  }
+
   // Check if phone number already exists
   const existing = await User.findOne({ phone });
   if (existing) {
     throw new ApiError(409, "Phone number already exists");
+  }
+
+  // Update user profile
+  const updated = await User.findByIdAndUpdate(
+    { _id: req.user._id },
+    {
+      phone,
+    }
+  );
+
+  if (!updated) {
+    throw new ApiError(500, "User profile not updated");
+  }
+
+  // Find the updated user without password
+  const updatedUser = await User.findById(req.user._id).select("-password");
+
+  // Send response
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedUser, "User profile updated successfully")
+    );
+});
+
+const updateName = AsyncHandler(async (req, res, next) => {
+  const { name } = req.body;
+
+  // Check for required fields
+  const requiredFields = ["name"];
+  for (const field of requiredFields) {
+    if (!req.body[field] || req.body[field].trim() === "") {
+      throw new ApiError(
+        400,
+        `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+      );
+    }
+  }
+
+  // Update user profile
+  const updated = await User.findByIdAndUpdate(
+    { _id: req.user._id },
+    {
+      name,
+    }
+  );
+
+  if (!updated) {
+    throw new ApiError(500, "User profile not updated");
+  }
+
+  // Find the updated user without password
+  const updatedUser = await User.findById(req.user._id).select("-password");
+
+  // Send response
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedUser, "User profile updated successfully")
+    );
+});
+
+const updatePassword = AsyncHandler(async (req, res, next) => {
+  const { password } = req.body;
+
+  // Check for required fields
+  const requiredFields = ["password"];
+  for (const field of requiredFields) {
+    if (!req.body[field] || req.body[field].trim() === "") {
+      throw new ApiError(
+        400,
+        `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+      );
+    }
   }
 
   // Validate password length
@@ -174,9 +350,6 @@ const updateProfile = AsyncHandler(async (req, res, next) => {
   const updated = await User.findByIdAndUpdate(
     { _id: req.user._id },
     {
-      name,
-      phone,
-      mail,
       password: hashedPassword,
     }
   );
@@ -220,7 +393,11 @@ export {
   register,
   login,
   logout,
-  updateProfile,
+  // updateProfile,
+  updateMail,
+  updatePhone,
+  updateName,
+  updatePassword,
   deleteProfile,
   getProfile,
 };
