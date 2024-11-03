@@ -5,12 +5,16 @@ import { User } from "../../models/user/user.model.js";
 import { generateToken } from "../../utils/JwtToken.js";
 import { options } from "../../utils/JwtToken.js";
 import bcrypt from "bcryptjs";
-import cookieParser from "cookie-parser";
+import {
+  generateVerificationCode,
+  storeVerificationCode,
+} from "../../utils/verification.js";
+import { sendEmail } from "../../utils/mailer.js";
 
 const register = AsyncHandler(async (req, res, next) => {
-  const { mail, phone, password, name } = req.body;
+  const { mail, phone, password, name, code } = req.body;
 
-  const requiredFields = ["mail", "phone", "password", "name"];
+  const requiredFields = ["mail", "phone", "password", "name", "code"];
 
   // Check for required fields
   for (const field of requiredFields) {
@@ -116,6 +120,7 @@ const login = AsyncHandler(async (req, res, next) => {
     phone: user.phone,
     name: user.name,
     role: user.role,
+    isVerified: user.isVerified,
   };
   // Set cookie and send response
   res
@@ -131,273 +136,37 @@ const logout = AsyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, req.user, "User logged out successfully"));
 });
 
-// const updateProfile = AsyncHandler(async (req, res, next) => {
-//   const { name, phone, mail, password } = req.body;
-
-//   // Check for required fields
-//   const requiredFields = ["name", "phone", "mail", "password"];
-//   for (const field of requiredFields) {
-//     if (!req.body[field] || req.body[field].trim() === "") {
-//       throw new ApiError(
-//         400,
-//         `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
-//       );
-//     }
-//   }
-
-//   // Validate email
-//   if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(mail)) {
-//     throw new ApiError(400, "Invalid Email");
-//   }
-
-//   // Check if email already exists
-//   const existingUser = await User.findOne({ mail });
-//   if (existingUser) {
-//     throw new ApiError(409, "Email already exists");
-//   }
-
-//   // Check if phone number already exists
-//   const existing = await User.findOne({ phone });
-//   if (existing) {
-//     throw new ApiError(409, "Phone number already exists");
-//   }
-
-//   // Validate password length
-//   if (password.length < 8 || password.length > 16) {
-//     throw new ApiError(400, "Password must be between 8 and 16 characters");
-//   }
-
-//   // Hash password
-//   const hashedPassword = await bcrypt.hash(password, 4);
-
-//   // Update user profile
-//   const updated = await User.findByIdAndUpdate(
-//     { _id: req.user._id },
-//     {
-//       name,
-//       phone,
-//       mail,
-//       password: hashedPassword,
-//     }
-//   );
-
-//   if (!updated) {
-//     throw new ApiError(500, "User profile not updated");
-//   }
-
-//   // Find the updated user without password
-//   const updatedUser = await User.findById(req.user._id).select("-password");
-
-//   // Send response
-//   res
-//     .status(200)
-//     .json(
-//       new ApiResponse(200, updatedUser, "User profile updated successfully")
-//     );
-// });
-
-const updateMail = AsyncHandler(async (req, res, next) => {
-  const { mail } = req.body;
-
-  // Check for required fields
-  const requiredFields = ["mail"];
-  for (const field of requiredFields) {
-    if (!req.body[field] || req.body[field].trim() === "") {
-      throw new ApiError(
-        400,
-        `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
-      );
-    }
-  }
-
-  // Validate email
-  if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(mail)) {
-    throw new ApiError(400, "Invalid Email");
-  }
-
-  // Check if email already exists
-  const existingUser = await User.findOne({ mail });
-  if (existingUser) {
-    throw new ApiError(409, "Email already exists");
-  }
-
-  // Update user profile
-  const updated = await User.findByIdAndUpdate(
-    { _id: req.user._id },
-    {
-      mail,
-    }
-  );
-
-  if (!updated) {
-    throw new ApiError(500, "User profile not updated");
-  }
-
-  // Find the updated user without password
-  const updatedUser = await User.findById(req.user._id).select("-password");
-
-  // Send response
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, updatedUser, "User profile updated successfully")
-    );
-});
-
-const updatePhone = AsyncHandler(async (req, res, next) => {
-  const { phone } = req.body;
-
-  // Check for required fields
-  const requiredFields = ["phone"];
-  for (const field of requiredFields) {
-    if (!req.body[field] || req.body[field].trim() === "") {
-      throw new ApiError(
-        400,
-        `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
-      );
-    }
-  }
-
-  // Check if phone number already exists
-  const existing = await User.findOne({ phone });
-  if (existing) {
-    throw new ApiError(409, "Phone number already exists");
-  }
-
-  // Update user profile
-  const updated = await User.findByIdAndUpdate(
-    { _id: req.user._id },
-    {
-      phone,
-    }
-  );
-
-  if (!updated) {
-    throw new ApiError(500, "User profile not updated");
-  }
-
-  // Find the updated user without password
-  const updatedUser = await User.findById(req.user._id).select("-password");
-
-  // Send response
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, updatedUser, "User profile updated successfully")
-    );
-});
-
-const updateName = AsyncHandler(async (req, res, next) => {
-  const { name } = req.body;
-
-  // Check for required fields
-  const requiredFields = ["name"];
-  for (const field of requiredFields) {
-    if (!req.body[field] || req.body[field].trim() === "") {
-      throw new ApiError(
-        400,
-        `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
-      );
-    }
-  }
-
-  // Update user profile
-  const updated = await User.findByIdAndUpdate(
-    { _id: req.user._id },
-    {
-      name,
-    }
-  );
-
-  if (!updated) {
-    throw new ApiError(500, "User profile not updated");
-  }
-
-  // Find the updated user without password
-  const updatedUser = await User.findById(req.user._id).select("-password");
-
-  // Send response
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, updatedUser, "User profile updated successfully")
-    );
-});
-
-const updatePassword = AsyncHandler(async (req, res, next) => {
-  const { password } = req.body;
-
-  // Check for required fields
-  const requiredFields = ["password"];
-  for (const field of requiredFields) {
-    if (!req.body[field] || req.body[field].trim() === "") {
-      throw new ApiError(
-        400,
-        `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
-      );
-    }
-  }
-
-  // Validate password length
-  if (password.length < 8 || password.length > 16) {
-    throw new ApiError(400, "Password must be between 8 and 16 characters");
-  }
-
-  // Hash password
-  const hashedPassword = await bcrypt.hash(password, 4);
-
-  // Update user profile
-  const updated = await User.findByIdAndUpdate(
-    { _id: req.user._id },
-    {
-      password: hashedPassword,
-    }
-  );
-
-  if (!updated) {
-    throw new ApiError(500, "User profile not updated");
-  }
-
-  // Find the updated user without password
-  const updatedUser = await User.findById(req.user._id).select("-password");
-
-  // Send response
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, updatedUser, "User profile updated successfully")
-    );
-});
-
-const deleteProfile = AsyncHandler(async (req, res, next) => {
-  const deleted = await User.findByIdAndDelete({ _id: req.user._id });
-
-  if (!deleted) {
-    throw new ApiError(500, "User profile not deleted");
-  }
-
-  // Send response
-  res
-    .status(200)
-    .clearCookie("accessToken", options)
-    .json(new ApiResponse(200, req.user, "User profile deleted successfully"));
-});
-
 const getProfile = AsyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, req.user, "User fetched successfully"));
 });
 
-export {
-  register,
-  login,
-  logout,
-  // updateProfile,
-  updateMail,
-  updatePhone,
-  updateName,
-  updatePassword,
-  deleteProfile,
-  getProfile,
-};
+const verifyEmail = AsyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  const code = generateVerificationCode();
+  storeVerificationCode(email, code);
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Verification Code",
+    text: `Your verification code is: ${code}`,
+    html: `<p>Your verification code is: <strong>${code}</strong></p>`,
+  };
+
+  const emailSent = await sendEmail(mailOptions);
+
+  if (emailSent) {
+    res.status(200).json(new ApiResponse(200, code, "Verification code sent successfully"));
+  } else {
+    res.status(500).json({ error: "Failed to send verification code" });
+  }
+});
+
+export { register, login, logout, getProfile, verifyEmail };

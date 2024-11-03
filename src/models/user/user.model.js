@@ -1,4 +1,3 @@
-import e from "express";
 import mongoose, { Schema } from "mongoose";
 
 const userSchema = new Schema({
@@ -33,6 +32,10 @@ const userSchema = new Schema({
     required: true,
     default: "guest",
     enum: ["superAdmin", "admin", "user", "guest", "banned", "client"],
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
   },
 });
 
