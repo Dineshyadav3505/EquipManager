@@ -4,19 +4,22 @@ import mongoose, { Schema } from "mongoose";
 const ProductSchema = new Schema({
     siteName: {
         type: String,
+        lowercase: true,
         required: true,
     },
     category: {
         type: String,
-        enum: ["laptop", "smartphone", "tablet", "desktop", "others"],
+        lowercase: true,
         required: true,
     },
     modelNumber: {
         type: String,
+        lowercase: true,
         required: true,
     },
     brand: {
         type: String,
+        lowercase: true,
         required: true,
     },
     warrantyDate: {

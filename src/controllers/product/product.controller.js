@@ -76,8 +76,7 @@ const getProductsAllProducts = asyncHandler(async (req, res, next) => {
 
 const getProductById = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-    console.log(id);
-    
+
     const product = await Product.findById(id);
 
     if (!product) {
@@ -88,4 +87,60 @@ const getProductById = asyncHandler(async (req, res, next) => {
 
 });
 
-export { createProduct, getProductsAllProducts, getProductById };
+const updateProduct = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+        throw new apiError(404, "Product not found");
+    }
+
+    const { siteName, category, modelNumber, brand, warrantyDate, image } =
+        req.body;
+
+    const userId = req.user._id;
+
+    if (!userId) {
+        throw new apiError(401, "You need to login to create a product");
+    }
+
+      if (req.user.role !== "superAdmin" && req.user.role !== "admin") {
+        throw new apiError(403, "Unauthorized request");
+      }
+
+    let updateFiled = {};
+
+    if (siteName) updateFiled.siteName = siteName;
+    if (category) updateFiled.category = category;
+    if (modelNumber) updateFiled.modelNumber = modelNumber;
+    if (brand) updateFiled.brand = brand;
+    if (warrantyDate) updateFiled.warrantyDate = warrantyDate;
+    if (image) updateFiled.image = image;
+
+    const updatedProduct = await Product.findByIdAndUpdate (
+        id,
+        updateFiled,
+        { new: true }
+    );
+
+    res.status(200).json(new apiResponse(200, { updatedProduct }, "Product updated successfully"));
+
+});
+
+const deleteProduct = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+        throw new apiError(404, "Product not found");
+    }
+
+    let deletedProduct = await Product.findByIdAndDelete(id);
+
+    res.status(200).json(new apiResponse(200, deletedProduct, "Product deleted successfully"));
+
+});
+
+export { createProduct, getProductsAllProducts, getProductById, updateProduct, deleteProduct};
