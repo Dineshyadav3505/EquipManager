@@ -126,7 +126,7 @@ const login = asyncHandler(async (req, res, next) => {
     mail: user.mail,
     phone: user.phone,
     name: user.name,
-    role: user.role
+    role: user.role,
   };
   // Set cookie and send response
   res
@@ -177,5 +177,111 @@ const verifyEmail = asyncHandler(async (req, res) => {
   }
 });
 
+const forgotPasswordVerifyEmail = asyncHandler(async (req, res) => {
+  const { mail } = req.body;
 
-export { register, login, logout, getProfile, verifyEmail };
+  if (!mail) {
+    return res.status(400).json(new apiError(400,{}, "Email is required"));
+  }
+
+  const user = await User.findOne({ mail });
+
+  if (!user) {
+    return res.status(404).json(new apiError(404, "User not exists"));
+  }
+
+  const code = generateVerificationCode();
+  storeVerificationEmailCode(mail, code);
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: mail,
+    subject: "Reset Password",
+    text: `Your Password reset code is: ${code}`,
+    html: `<p>Your Password reset code is: <strong>${code}</strong></p>`,
+  };
+
+  const emailSent = await sendEmail(mailOptions);
+
+  if (emailSent) {
+    res
+      .status(200)
+      .json(new apiResponse(200, code, "Verification code sent successfully"));
+  } else {
+    res.status(500).json(new apiError(500, "Failed to send verification code"));
+  }
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { mail, code, newPassword } = req.body;
+
+  const requiredFields = ["mail", "newPassword", "code"];
+
+  // Validate email
+  const mailVerify = verifyCode(mail, code);
+
+  // Check for required fields
+  for (const field of requiredFields) {
+    if (!req.body[field] || req.body[field].trim() === "") {
+      throw new apiError(
+        400,
+        `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+      );
+    }
+  }
+
+  if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(mail)) {
+    throw new apiError(400, "Invalid Email");
+  }
+
+  if (!mailVerify) {
+    throw new apiError(400, "Invalid verification code");
+  }
+
+  // Check if email already exists
+  const existingUser = await User.findOne({ mail });
+  if (!existingUser) {
+    throw new apiError(404, "Email not exists", [], "Email not exists");
+  }
+
+  // Validate password length
+  if (newPassword.length < 8 || newPassword.length > 16) {
+    throw new apiError(400, "Password must be between 8 and 16 characters");
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Update password
+  const updatedUser = await User.findOne({ mail }).updateOne({
+    password: hashedPassword,
+  });
+
+  if (!updatedUser) {
+    throw new apiError(500, "Password not updated");
+  }
+
+  const userData = {
+    _id: updatedUser._id,
+    mail: updatedUser.mail,
+    phone: updatedUser.phone,
+    name: updatedUser.name,
+    role: updatedUser.role,
+  };
+
+  res
+    .status(200)
+    .json(
+      new apiResponse(200, userData , "Password updated successfully")
+    );
+});
+
+export {
+  register,
+  login,
+  logout,
+  getProfile,
+  verifyEmail,
+  forgotPassword,
+  forgotPasswordVerifyEmail,
+};
