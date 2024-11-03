@@ -74,6 +74,18 @@ const getProductsAllProducts = asyncHandler(async (req, res, next) => {
   }
 });
 
+const getProductById = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    console.log(id);
+    
+    const product = await Product.findById(id);
 
+    if (!product) {
+        throw new apiError(404, "Product not found");
+    }
 
-export { createProduct, getProductsAllProducts };
+    res.status(200).json(new apiResponse(200, { product }));
+
+});
+
+export { createProduct, getProductsAllProducts, getProductById };
