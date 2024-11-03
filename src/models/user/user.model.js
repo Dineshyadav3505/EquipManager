@@ -32,11 +32,7 @@ const userSchema = new Schema({
     required: true,
     default: "guest",
     enum: ["superAdmin", "admin", "user", "guest", "banned", "client"],
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
-  },
+  }
 });
 
 const User = mongoose.model("User", userSchema);

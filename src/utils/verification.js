@@ -4,8 +4,12 @@ function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function storeVerificationCode(email, code) {
+function storeVerificationEmailCode(email, code) {
   codes[email] = code;
+}
+
+function storeVerificationPhoneCode(phone, code) {
+  codes[phone] = code;
 }
 
 function verifyCode(email, code) {
@@ -17,4 +21,13 @@ function verifyCode(email, code) {
   return false;
 }
 
-export { generateVerificationCode, storeVerificationCode, verifyCode };
+function verifyPhoneCode(phone, code) {
+  const storedCode = codes[phone];
+  if (storedCode === code) {
+    delete codes[phone]; // Remove the code after verification
+    return true;
+  }
+  return false;
+}
+
+export { generateVerificationCode, storeVerificationEmailCode, storeVerificationPhoneCode, verifyCode, verifyPhoneCode };
