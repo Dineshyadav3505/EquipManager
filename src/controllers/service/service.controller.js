@@ -37,6 +37,12 @@ const createService = asyncHandler(async (req, res, next) => {
         .json(new apiResponse(201, { service }, "Service created successfully"));
 });
 
+const getService = asyncHandler(async (req, res, next) => {
+    const services = await Service.find().populate("product").populate({ path: "user", select: "-password" });
+
+    res.status(200).json(new apiResponse(200, { services }, "Services fetched successfully"));
+});
+
 const getServiceById = asyncHandler(async (req, res, next) => {
 
     const service = await Service.findById(req.params.id).populate("product").populate({ path: "user", select: "-password" });
@@ -48,6 +54,12 @@ const getServiceById = asyncHandler(async (req, res, next) => {
     res.status(200).json(new apiResponse(200, { service }, "Service fetched successfully"));
 });
 
+const getServiceByProductId = asyncHandler(async (req, res, next) => {
+    const services = await Service.find({ product: req.params.id }).populate("product").populate({ path: "user", select: "-password" });
+
+    res.status(200).json(new apiResponse(200, { services }, "Services fetched successfully"));
+});
 
 
-export { createService, getServiceById };
+
+export { createService, getServiceById, getService, getServiceByProductId };
