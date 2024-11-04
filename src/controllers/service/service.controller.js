@@ -39,7 +39,7 @@ const createService = asyncHandler(async (req, res, next) => {
 
 const getServiceById = asyncHandler(async (req, res, next) => {
 
-    const service = await Service.findById(req.params.id).populate("product").populate("user");
+    const service = await Service.findById(req.params.id).populate("product").populate({ path: "user", select: "-password" });
 
     if (!service) {
         throw new apiError(404, "Service not found");
