@@ -50,4 +50,4 @@ const getServiceById = asyncHandler(async (req, res, next) => {
 
 
 
-export { createService, getServicesAllServices, getServiceById };
+export { createService, getServiceById };

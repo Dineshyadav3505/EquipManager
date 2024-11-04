@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { register, login, logout, getProfile, verifyEmail, forgotPasswordVerifyEmail, forgotPassword} from "../../controllers/user/user.controller.js";
 import { createProduct, getProductById, getProductsAllProducts, updateProduct, deleteProduct } from "../../controllers/product/product.controller.js";
-import { createService, getServicesAllServices, getServiceById } from "../../controllers/service/service.controller.js";
+import { createService, getServiceById } from "../../controllers/service/service.controller.js";
 import { verifyJWT } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
