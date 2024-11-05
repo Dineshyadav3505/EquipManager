@@ -33,6 +33,8 @@ const userSchema = new Schema({
     default: "guest",
     enum: ["superAdmin", "admin", "user", "guest", "banned", "client"],
   }
+}, {
+  timestamps: true,
 });
 
 const User = mongoose.model("User", userSchema);
