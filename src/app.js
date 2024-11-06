@@ -23,9 +23,16 @@ app.use(cookieParser());
 
 // Routes
 ///////////////////////////////////////////////////////////////
-import userRouter from "./routes/user/user.routes.js";
+import { userRouter } from "./routes/user/user.routes.js";
+import { productRouter } from "./routes/product/product.route.js";
+import { serviceRouter } from "./routes/service/service.route.js";
 
-app.use("/api/v1/user", userRouter);
+app.get("/", (req, res) => {
+    res.send("Welcome to the API");
+});
+app.use("/api/v1",  userRouter);
+app.use("/api/v1",  productRouter);
+app.use("/api/v1",  serviceRouter);
 
 
 export {app};
