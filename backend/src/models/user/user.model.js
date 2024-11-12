@@ -22,9 +22,13 @@ const userSchema = new Schema({
     trim: true,
     minlength: 6,
   },
-  name: {
+  firstName: {
     type: String,
     required: true,
+    trim: true,
+  },
+  lastName: {
+    type: String,
     trim: true,
   },
   role: {
