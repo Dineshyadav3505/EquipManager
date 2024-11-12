@@ -8,7 +8,6 @@ const ServiceSchema = new Schema({
     },
     cost:{
         type: Number,
-        required: true,
     },
     product:{
         type: Schema.Types.ObjectId,
